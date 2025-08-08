@@ -1,0 +1,41 @@
+project.plugins.apply("java")
+project.plugins.apply("idea")
+project.plugins.apply("maven-publish")
+
+project.version = version
+project.group = group
+
+wrapper {
+    gradleVersion = "8.1.1"
+}
+
+project.sourceSets.main.java.srcDirs = ["src", "gen"]
+project.sourceSets.main.resources.srcDirs = ["res"]
+
+project.repositories {
+    mavenCentral()
+    maven { url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
+    maven { url "https://www.jitpack.io" }
+    maven { url "https://maven.nikr.net/" }
+}
+
+project.tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs += [
+            "-Xlint:none"
+    ]
+    options.generatedSourceOutputDirectory.set(project.file("gen"))
+
+    doFirst {
+        delete options.generatedSourceOutputDirectory.get().asFile.listFiles()
+    }
+}
+
+project.tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        project.configurations.runtimeClasspath.collect { File file ->
+            file.isDirectory() ? file : zipTree(file)
+        }
+    }
+}
