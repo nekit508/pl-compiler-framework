@@ -6,36 +6,50 @@ project.version = version
 project.group = group
 
 wrapper {
-    gradleVersion = "8.1.1"
+    gradleVersion = "8.8"
 }
 
-project.sourceSets.main.java.srcDirs = ["src", "gen"]
-project.sourceSets.main.resources.srcDirs = ["res"]
+sourceSets.main.java.srcDirs = ["src", "gen"]
+sourceSets.main.resources.srcDirs = ["res"]
 
-project.repositories {
+repositories {
     mavenCentral()
     maven { url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
     maven { url "https://www.jitpack.io" }
     maven { url "https://maven.nikr.net/" }
 }
 
-project.tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
     options.compilerArgs += [
             "-Xlint:none"
     ]
     options.generatedSourceOutputDirectory.set(project.file("gen"))
 
+    sourceCompatibility = JavaVersion.VERSION_20
+
+    options.compilerArgs = [
+            "--release", "8",
+            "-Xlint:-options"
+    ]
+
     doFirst {
         delete options.generatedSourceOutputDirectory.get().asFile.listFiles()
     }
 }
 
-project.tasks.jar {
+tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         project.configurations.runtimeClasspath.collect { File file ->
             file.isDirectory() ? file : zipTree(file)
         }
     }
+}
+
+dependencies {
+    annotationProcessor "com.pkware.jabel:jabel-javac-plugin:$jabelVersion"
+    compileOnly "com.pkware.jabel:jabel-javac-plugin:$jabelVersion"
+
+    implementation "com.github.Anuken.Arc:arc-core:$arcVersion"
 }

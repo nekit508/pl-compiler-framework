@@ -1,0 +1,13 @@
+{
+    field1: [50f, 21D, "sadfdasf", true, 58i]
+    field2: {
+        field: "string"
+    }
+    field3: true
+    field4: [
+        {field: "false"},
+        {field: false},
+        {idk: [true, 0f, 0L, "false"]}
+    ]
+    field5: 50f
+}
