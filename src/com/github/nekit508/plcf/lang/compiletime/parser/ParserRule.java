@@ -4,7 +4,7 @@ import com.github.nekit508.plcf.lang.Context;
 import com.github.nekit508.plcf.lang.Tree;
 import com.github.nekit508.plcf.lang.exceptions.ParseFail;
 
-public class ParserRule<P extends Context<?>, O extends Tree> {
+public class ParserRule<P extends Parser<? extends Context<?>>, O extends Tree> {
     private final ParserRuleParser<P, O> parser;
     public String name;
 
@@ -13,7 +13,7 @@ public class ParserRule<P extends Context<?>, O extends Tree> {
         this.parser = parser;
     }
 
-    public O parse(Parser<P> context) throws ParseFail {
-        return parser.parse(context);
+    public O parse(P p) throws ParseFail {
+        return parser.parse(p);
     }
 }

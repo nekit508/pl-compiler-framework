@@ -9,14 +9,14 @@ import com.github.nekit508.plcf.lang.exceptions.ParseFail;
 import com.github.nekit508.plcf.lang.utils.ReusableStream;
 
 public class BaseParser extends Parser<BaseContext> {
-    public static ParserRule<BaseContext, BaseTree.Map> mapRule;
-    public static ParserRule<BaseContext, BaseTree.Key> keyRule;
-    public static ParserRule<BaseContext, BaseTree.Value> valueRule;
-    public static ParserRule<BaseContext, BaseTree.Array> arrayRule;
+    public static ParserRule<BaseParser, BaseTree.Map> mapRule;
+    public static ParserRule<BaseParser, BaseTree.Key> keyRule;
+    public static ParserRule<BaseParser, BaseTree.Value> valueRule;
+    public static ParserRule<BaseParser, BaseTree.Array> arrayRule;
 
-    public static ParserRule<BaseContext, BaseTree.Number> numberRule;
-    public static ParserRule<BaseContext, BaseTree.Str> stringRule;
-    public static ParserRule<BaseContext, BaseTree.Bool> boolRule;
+    public static ParserRule<BaseParser, BaseTree.Number> numberRule;
+    public static ParserRule<BaseParser, BaseTree.Str> stringRule;
+    public static ParserRule<BaseParser, BaseTree.Bool> boolRule;
 
     static {
         keyRule = new ParserRule<>("key", parser -> {
@@ -114,7 +114,7 @@ public class BaseParser extends Parser<BaseContext> {
     }
 
     @Override
-    public ParserRule<BaseContext, BaseTree.Map> getRootRule() {
+    public ParserRule<BaseParser, BaseTree.Map> getRootRule() {
         return mapRule;
     }
 }

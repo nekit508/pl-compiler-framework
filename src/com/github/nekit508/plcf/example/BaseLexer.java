@@ -64,7 +64,7 @@ public class BaseLexer extends Lexer<BaseContext> {
             '\'', '"'
     };
 
-    public static Seq<LexerRule<BaseContext>> rootRules = new Seq<>();
+    public static Seq<LexerRule<BaseLexer>> rootRules = new Seq<>();
 
     public static String[] keywords = {
             "true",
@@ -75,7 +75,7 @@ public class BaseLexer extends Lexer<BaseContext> {
             BaseTokenKind.BOOLEAN
     };
 
-    public static LexerRule<BaseContext>
+    public static LexerRule<BaseLexer>
             skipWhiteSpacesRule,
             skipCommentsRule,
             parseIdentOrKeywordRule,
@@ -101,7 +101,7 @@ public class BaseLexer extends Lexer<BaseContext> {
     }
 
     @Override
-    public Seq<LexerRule<BaseContext>> getRootRules() {
+    public Seq<LexerRule<BaseLexer>> getRootRules() {
         return rootRules;
     }
 }

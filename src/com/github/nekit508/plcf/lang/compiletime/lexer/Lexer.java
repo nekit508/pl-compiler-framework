@@ -2,6 +2,7 @@ package com.github.nekit508.plcf.lang.compiletime.lexer;
 
 import arc.struct.Seq;
 import com.github.nekit508.plcf.lang.Context;
+import com.github.nekit508.plcf.lang.compiletime.parser.Parser;
 import com.github.nekit508.plcf.lang.compiletime.token.DefaultTokenKinds;
 import com.github.nekit508.plcf.lang.compiletime.token.Token;
 import com.github.nekit508.plcf.lang.exceptions.ParseFail;
@@ -18,7 +19,7 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
 
     public boolean tokenParsed;
 
-    public abstract Seq<LexerRule<T>> getRootRules();
+    public abstract <L extends Lexer<T>> Seq<LexerRule<L>> getRootRules();
 
     public Lexer(ReusableStream<Character> compileSource, PosProvider posProvider, T context) {
         this.context = context;
@@ -95,7 +96,7 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
             setTokenPos();
 
             var rules = getRootRules();
-            for (LexerRule<T> rule : rules) {
+            for (var rule : rules) {
                 try {
                     parseIfCan(rule);
                     if (tokenParsed)
@@ -122,17 +123,17 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
         }
     }
 
-    public boolean canParse(LexerRule<T> rule) throws ParseFail {
+    public <L extends Lexer<T>> boolean canParse(LexerRule<L> rule) throws ParseFail {
         try {
             logger.info("Check can parse rule @ at @", rule.name, pos());
-            return rule.canBeParsed(this);
+            return rule.canBeParsed((L) this);
         } catch (ParseFail e) {
             logger.info("Failed to check can parse rule @ at @", rule.name, pos());
             throw new ParseFail("Failed check can parse parse " + rule.name + " at " + pos() + ".", e);
         }
     }
 
-    public boolean parseIfCan(LexerRule<T> rule) throws ParseFail {
+    public <L extends Lexer<T>> boolean parseIfCan(LexerRule<L> rule) throws ParseFail {
         if (canParse(rule)) {
             parse(rule);
             return true;
@@ -141,10 +142,10 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
         return false;
     }
 
-    public void parse(LexerRule<T> rule) throws ParseFail {
+    public <L extends Lexer<T>>  void parse(LexerRule<L> rule) throws ParseFail {
         try {
             logger.info("Parsing rule @ at @", rule.name, pos());
-            rule.parse(this);
+            rule.parse((L) this);
         } catch (ParseFail e) {
             logger.info("Failed rule @ at @", rule.name, pos());
             throw new ParseFail("Failed to parse " + rule.name + " at " + pos() + ".", e);

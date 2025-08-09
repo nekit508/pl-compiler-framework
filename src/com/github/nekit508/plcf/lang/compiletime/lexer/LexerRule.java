@@ -2,27 +2,26 @@ package com.github.nekit508.plcf.lang.compiletime.lexer;
 
 import arc.func.Prov;
 import arc.util.Nullable;
-import com.github.nekit508.plcf.example.BaseTokenKind;
 import com.github.nekit508.plcf.lang.Context;
 import com.github.nekit508.plcf.lang.compiletime.token.TokenKind;
 import com.github.nekit508.plcf.lang.exceptions.ParseFail;
 
-public class LexerRule<C extends Context<?>> {
-    public LexerRuleParser<C> parser;
-    public @Nullable LexerRuleAcceptor<C> acceptor;
+public class LexerRule<L extends Lexer<? extends Context<?>>> {
+    public LexerRuleParser<L> parser;
+    public @Nullable LexerRuleAcceptor<L> acceptor;
     public String name;
 
-    public LexerRule(String name, LexerRuleParser<C> parser, @Nullable LexerRuleAcceptor<C> acceptor) {
+    public LexerRule(String name, LexerRuleParser<L> parser, @Nullable LexerRuleAcceptor<L> acceptor) {
         this.name = name;
         this.parser = parser;
         this.acceptor = acceptor;
     }
 
-    public void parse(Lexer<C> context) throws ParseFail {
+    public void parse(L context) throws ParseFail {
         parser.parse(context);
     }
 
-    public boolean canBeParsed(Lexer<C> context) throws ParseFail {
+    public boolean canBeParsed(L context) throws ParseFail {
         return acceptor == null || acceptor.canBeProcessed(context);
     }
 
@@ -34,7 +33,7 @@ public class LexerRule<C extends Context<?>> {
         return false;
     }
 
-    public static <C extends Context<?>, T extends TokenKind & Prov<Character>> LexerRule<C> createOneSymbolParser(String name, T[] kinds) {
+    public static <C extends Context<?>, L extends Lexer<C>, T extends TokenKind & Prov<Character>> LexerRule<L> createOneSymbolParser(String name, T[] kinds) {
         return new LexerRule<>(name, lexer -> {
             for (T kind: kinds) {
                 if (kind.get() == lexer.getChar()) {
@@ -46,7 +45,7 @@ public class LexerRule<C extends Context<?>> {
         }, null);
     }
 
-    public static <C extends Context<?>> LexerRule<C> createStringParser(String name, TokenKind kind, char[] quotes) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> createStringParser(String name, TokenKind kind, char[] quotes) {
         return new LexerRule<>(name, lexer -> {
             var ind = -1;
             var c = lexer.getChar();
@@ -65,14 +64,14 @@ public class LexerRule<C extends Context<?>> {
         }, lexer -> in(lexer.getChar(), quotes));
     }
 
-    public static <C extends Context<?>> LexerRule<C> createSkip(String name, char[] toSkip) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> createSkip(String name, char[] toSkip) {
         return new LexerRule<>(name, lexer -> {
             while (in(lexer.getNextChar(), toSkip));
             lexer.setTokenPos();
         }, lexer -> in(lexer.getChar(), toSkip));
     }
 
-    public static <C extends Context<?>> LexerRule<C> createSkipComments(String name, char[] newLine, char[] commentSymbol, char[] multiLineCommentModification) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> createSkipComments(String name, char[] newLine, char[] commentSymbol, char[] multiLineCommentModification) {
         return new LexerRule<>(name, lexer -> {
             lexer.saveCharState();
 
@@ -108,7 +107,7 @@ public class LexerRule<C extends Context<?>> {
         }, lexer -> in(lexer.getChar(), commentSymbol));
     }
 
-    public static <C extends Context<?>> LexerRule<C> createNumberParser(String name, TokenKind kind, char[] start, char[] body, char[] end) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> createNumberParser(String name, TokenKind kind, char[] start, char[] body, char[] end) {
         return new LexerRule<>(name, lexer -> {
             lexer.ct().kind = kind;
 
@@ -124,13 +123,13 @@ public class LexerRule<C extends Context<?>> {
         }, lexer -> in(lexer.getChar(), start));
     }
 
-    public static <C extends Context<?>> LexerRule<C> createIdentOrKeywordParser(String name, TokenKind identKind, char[] start, char[] body, String[] keywords, TokenKind[] keywordsKinds) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> createIdentOrKeywordParser(String name, TokenKind identKind, char[] start, char[] body, String[] keywords, TokenKind[] keywordsKinds) {
         return new LexerRule<>(name, lexer -> {
             do lexer.putChar(lexer.getChar());
             while (in(lexer.getNextChar(), body));
             lexer.redoChar();
 
-            lexer.ct().kind = BaseTokenKind.IDENT;
+            lexer.ct().kind = identKind;
 
             String str = lexer.cl().toString();
             for (int i = 0; i < keywords.length; i++)
@@ -141,17 +140,17 @@ public class LexerRule<C extends Context<?>> {
         }, lexer -> in(lexer.getChar(), start));
     }
 
-    public static <C extends Context<?>> LexerRule<C> parseWhileParsing(String name, LexerRule<C>... features) {
+    public static <C extends Context<?>, L extends Lexer<C>> LexerRule<L> parseWhileParsing(String name, LexerRule<L>... features) {
         return new LexerRule<>(name, lexer -> {
             whileLoop: while (true) {
-                for (LexerRule<C> feature : features) {
+                for (var feature : features) {
                     if (lexer.parseIfCan(feature))
                         continue whileLoop;
                 }
                 break;
             }
         }, lexer -> {
-            for (LexerRule<C> feature : features) {
+            for (LexerRule<L> feature : features) {
                 if (lexer.canParse(feature))
                     return true;
             }

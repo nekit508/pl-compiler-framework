@@ -25,7 +25,7 @@ public abstract class Parser<T extends Context<?>> {
         logger = new Logger(context.getRules().debugParser);
     }
 
-    public abstract <O extends Tree> ParserRule<T, O> getRootRule();
+    public abstract <O extends Tree, P extends Parser<T>> ParserRule<P, O> getRootRule();
 
     public Token current() {
         return tokenStream.get();
@@ -122,7 +122,7 @@ public abstract class Parser<T extends Context<?>> {
     }
 
     @SafeVarargs
-    public final <R extends Tree> R parseAny(ParserRule<T, ? extends R>... rules) throws ParseFail {
+    public final <R extends Tree, P extends Parser<T>> R parseAny(ParserRule<P, ? extends R>... rules) throws ParseFail {
         String causes = "";
 
         for (var rule : rules) {
@@ -142,17 +142,17 @@ public abstract class Parser<T extends Context<?>> {
         var pos = tokenStream.next().pos;
         redo();
         String out = "";
-        for (ParserRule<T, ? extends R> rule : rules)
+        for (var rule : rules)
             out += " " + rule.name;
         throw new ParseFail("Failed to parse any of " + out + " at " + pos + "." + causes);
     }
 
-    public <R extends Tree> R parse(ParserRule<T, R> rule) throws ParseFail {
+    public <R extends Tree, P extends Parser<T>> R parse(ParserRule<P, R> rule) throws ParseFail {
         var pos = next().pos;
         redo();
         try {
             logger.info("Parsing rule @ at @", rule.name, pos);
-            return rule.parse(this);
+            return rule.parse((P) this);
         } catch (ParseFail e) {
             logger.info("Failed rule @ at @", rule.name, pos);
             throw new ParseFail("Failed to parse " + rule.name + " at " + pos + ".", e);
