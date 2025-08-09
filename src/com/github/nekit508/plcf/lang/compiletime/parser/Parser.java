@@ -25,7 +25,7 @@ public abstract class Parser<T extends Context<?>> {
         logger = new Logger(context.getRules().debugParser);
     }
 
-    public abstract <O extends Tree> ParserFeature<T, O> getRootFeature();
+    public abstract <O extends Tree> ParserRule<T, O> getRootRule();
 
     public Token current() {
         return tokenStream.get();
@@ -122,13 +122,13 @@ public abstract class Parser<T extends Context<?>> {
     }
 
     @SafeVarargs
-    public final <R extends Tree> R parseAny(ParserFeature<T, ? extends R>... features) throws ParseFail {
+    public final <R extends Tree> R parseAny(ParserRule<T, ? extends R>... rules) throws ParseFail {
         String causes = "";
 
-        for (var feature : features) {
+        for (var rule : rules) {
             try {
                 tokenStream.saveState();
-                var out = parse(feature);
+                var out = parse(rule);
                 tokenStream.disposeState();
                 return out;
             } catch (ParseFail e) {
@@ -142,26 +142,26 @@ public abstract class Parser<T extends Context<?>> {
         var pos = tokenStream.next().pos;
         redo();
         String out = "";
-        for (ParserFeature<T, ? extends R> feature : features)
-            out += " " + feature.name;
-        throw new ParseFail("Failed to parse any of" + out + " at " + pos + "." + causes);
+        for (ParserRule<T, ? extends R> rule : rules)
+            out += " " + rule.name;
+        throw new ParseFail("Failed to parse any of " + out + " at " + pos + "." + causes);
     }
 
-    public <R extends Tree> R parse(ParserFeature<T, R> feature) throws ParseFail {
+    public <R extends Tree> R parse(ParserRule<T, R> rule) throws ParseFail {
         var pos = next().pos;
         redo();
         try {
-            logger.info("Parsing feature @ at @", feature.name, pos);
-            return feature.parse(this);
+            logger.info("Parsing rule @ at @", rule.name, pos);
+            return rule.parse(this);
         } catch (ParseFail e) {
-            logger.info("Failed feature @ at @", feature.name, pos);
-            throw new ParseFail("Failed to parse " + feature.name + " at " + pos + ".", e);
+            logger.info("Failed rule @ at @", rule.name, pos);
+            throw new ParseFail("Failed to parse " + rule.name + " at " + pos + ".", e);
         }
     }
 
     public Tree parseCompileSource() throws ParserException {
         try {
-            return parse(getRootFeature());
+            return parse(getRootRule());
         } catch (ParseFail e) {
             throw new ParserException(e);
         }

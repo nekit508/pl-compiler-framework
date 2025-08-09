@@ -10,7 +10,7 @@ import java.io.FileNotFoundException;
 public class Main {
     public static void main(String[] args) {
         try {
-            var context = new BaseContext(new ContextRules(false, false, false));
+            var context = new BaseContext(new ContextRules(true, false, false));
             context.getCompileTaskFor(new FileCompileSource(new File("file"))).run();
         } catch (CompileTaskException | FileNotFoundException e) {
             throw new RuntimeException(e);

@@ -1,6 +1,9 @@
 {
     field1: [50f, 21D, "sadfdasf", true, 58i]
     field2: {
+    // skip this comment
+    /* skip / this * comment * too */
+    /* and this */ // and this comment should be skipped
         field: "string"
     }
     field3: true

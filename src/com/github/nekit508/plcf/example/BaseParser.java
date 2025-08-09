@@ -3,35 +3,35 @@ package com.github.nekit508.plcf.example;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import com.github.nekit508.plcf.lang.compiletime.parser.Parser;
-import com.github.nekit508.plcf.lang.compiletime.parser.ParserFeature;
+import com.github.nekit508.plcf.lang.compiletime.parser.ParserRule;
 import com.github.nekit508.plcf.lang.compiletime.token.Token;
 import com.github.nekit508.plcf.lang.exceptions.ParseFail;
 import com.github.nekit508.plcf.lang.utils.ReusableStream;
 
 public class BaseParser extends Parser<BaseContext> {
-    public static ParserFeature<BaseContext, BaseTree.Map> mapFeature;
-    public static ParserFeature<BaseContext, BaseTree.Key> keyFeature;
-    public static ParserFeature<BaseContext, BaseTree.Value> valueFeature;
-    public static ParserFeature<BaseContext, BaseTree.Array> arrayFeature;
+    public static ParserRule<BaseContext, BaseTree.Map> mapRule;
+    public static ParserRule<BaseContext, BaseTree.Key> keyRule;
+    public static ParserRule<BaseContext, BaseTree.Value> valueRule;
+    public static ParserRule<BaseContext, BaseTree.Array> arrayRule;
 
-    public static ParserFeature<BaseContext, BaseTree.Number> numberFeature;
-    public static ParserFeature<BaseContext, BaseTree.Str> stringFeature;
-    public static ParserFeature<BaseContext, BaseTree.Bool> boolFeature;
+    public static ParserRule<BaseContext, BaseTree.Number> numberRule;
+    public static ParserRule<BaseContext, BaseTree.Str> stringRule;
+    public static ParserRule<BaseContext, BaseTree.Bool> boolRule;
 
     static {
-        keyFeature = new ParserFeature<>("key", parser -> {
+        keyRule = new ParserRule<>("key", parser -> {
             var ident = parser.accept(BaseTokenKind.IDENT);
             return new BaseTree.Key(BaseTreeKinds.KEY, ident.literal);
         });
 
-        mapFeature = new ParserFeature<>("map", parser -> {
+        mapRule = new ParserRule<>("map", parser -> {
             var data = new ObjectMap<BaseTree.Key, BaseTree.Value>();
 
             parser.accept(OneSymbolTokenKind.L_BRACE);
             while (parser.probeNotAndRedoIf(true, OneSymbolTokenKind.R_BRACE)) {
-                var key = parser.parse(keyFeature);
+                var key = parser.parse(keyRule);
                 parser.accept(OneSymbolTokenKind.COLON);
-                var value = parser.parseAny(valueFeature);
+                var value = parser.parseAny(valueRule);
 
                 data.put(key, value);
             }
@@ -39,20 +39,20 @@ public class BaseParser extends Parser<BaseContext> {
             return new BaseTree.Map(BaseTreeKinds.MAP, data);
         });
 
-        valueFeature = new ParserFeature<>("value", parser -> {
+        valueRule = new ParserRule<>("value", parser -> {
             return parser.parseAny(
-                    arrayFeature, numberFeature, stringFeature, boolFeature, mapFeature
+                    arrayRule, numberRule, stringRule, boolRule, mapRule
             );
         });
 
-        arrayFeature = new ParserFeature<>("array", parser -> {
+        arrayRule = new ParserRule<>("array", parser -> {
             parser.accept(OneSymbolTokenKind.L_BRACKET);
 
             var out = new Seq<BaseTree.Value>();
 
             if (parser.probeNotAndRedoIf(true, OneSymbolTokenKind.R_BRACKET)) {
                 do {
-                    out.add(parser.parse(valueFeature));
+                    out.add(parser.parse(valueRule));
                 } while (parser.probeAndRedoIf(false, OneSymbolTokenKind.COMMA));
                 parser.probe(OneSymbolTokenKind.R_BRACKET);
             }
@@ -60,12 +60,12 @@ public class BaseParser extends Parser<BaseContext> {
             return new BaseTree.Array(BaseTreeKinds.ARRAY, null);
         });
 
-        stringFeature = new ParserFeature<>("string", parser -> {
+        stringRule = new ParserRule<>("string", parser -> {
             var string = parser.accept(BaseTokenKind.STRING).literal;
             return new BaseTree.Str(BaseTreeKinds.STRING, string);
         });
 
-        boolFeature = new ParserFeature<>("bool", parser -> {
+        boolRule = new ParserRule<>("bool", parser -> {
             var literal = parser.accept(BaseTokenKind.BOOLEAN).literal;
             boolean value;
 
@@ -78,7 +78,7 @@ public class BaseParser extends Parser<BaseContext> {
             return new BaseTree.Bool(BaseTreeKinds.BOOL, value);
         });
 
-        numberFeature = new ParserFeature<>("number", parser -> {
+        numberRule = new ParserRule<>("number", parser -> {
             var literal = parser.accept(BaseTokenKind.NUMBER).literal;
             try {
                 Object out = null;
@@ -114,7 +114,7 @@ public class BaseParser extends Parser<BaseContext> {
     }
 
     @Override
-    public ParserFeature<BaseContext, BaseTree.Map> getRootFeature() {
-        return mapFeature;
+    public ParserRule<BaseContext, BaseTree.Map> getRootRule() {
+        return mapRule;
     }
 }

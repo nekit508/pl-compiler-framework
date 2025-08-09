@@ -18,7 +18,7 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
 
     public boolean tokenParsed;
 
-    public abstract Seq<LexerFeature<T>> getRootFeatures();
+    public abstract Seq<LexerRule<T>> getRootRules();
 
     public Lexer(ReusableStream<Character> compileSource, PosProvider posProvider, T context) {
         this.context = context;
@@ -94,10 +94,10 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
 
             setTokenPos();
 
-            var features = getRootFeatures();
-            for (LexerFeature<T> feature : features) {
+            var rules = getRootRules();
+            for (LexerRule<T> rule : rules) {
                 try {
-                    parseIfCan(feature);
+                    parseIfCan(rule);
                     if (tokenParsed)
                         break;
                 } catch (ParseFail fail) {
@@ -122,40 +122,32 @@ public abstract class Lexer<T extends Context<?>> extends ReusableStreamAbstract
         }
     }
 
-    public static boolean in(char c, char[] group) {
-        for (char value : group)
-            if (c == value)
-                return true;
-
-        return false;
-    }
-
-    public boolean canParse(LexerFeature<T> feature) throws ParseFail {
+    public boolean canParse(LexerRule<T> rule) throws ParseFail {
         try {
-            logger.info("Check can parse feature @ at @", feature.name, pos());
-            return feature.canBeParsed(this);
+            logger.info("Check can parse rule @ at @", rule.name, pos());
+            return rule.canBeParsed(this);
         } catch (ParseFail e) {
-            logger.info("Failed to check can parse feature @ at @", feature.name, pos());
-            throw new ParseFail("Failed check can parse parse " + feature.name + " at " + pos() + ".", e);
+            logger.info("Failed to check can parse rule @ at @", rule.name, pos());
+            throw new ParseFail("Failed check can parse parse " + rule.name + " at " + pos() + ".", e);
         }
     }
 
-    public boolean parseIfCan(LexerFeature<T> feature) throws ParseFail {
-        if (canParse(feature)) {
-            parse(feature);
+    public boolean parseIfCan(LexerRule<T> rule) throws ParseFail {
+        if (canParse(rule)) {
+            parse(rule);
             return true;
         }
 
         return false;
     }
 
-    public void parse(LexerFeature<T> feature) throws ParseFail {
+    public void parse(LexerRule<T> rule) throws ParseFail {
         try {
-            logger.info("Parsing feature @ at @", feature.name, pos());
-            feature.parse(this);
+            logger.info("Parsing rule @ at @", rule.name, pos());
+            rule.parse(this);
         } catch (ParseFail e) {
-            logger.info("Failed feature @ at @", feature.name, pos());
-            throw new ParseFail("Failed to parse " + feature.name + " at " + pos() + ".", e);
+            logger.info("Failed rule @ at @", rule.name, pos());
+            throw new ParseFail("Failed to parse " + rule.name + " at " + pos() + ".", e);
         }
     }
 

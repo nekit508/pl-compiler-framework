@@ -1,7 +1,8 @@
 package com.github.nekit508.plcf.lang.utils;
 
 import arc.struct.IntSeq;
-import com.github.nekit508.plcf.lang.compiletime.lexer.Lexer;
+
+import static com.github.nekit508.plcf.lang.compiletime.lexer.LexerRule.in;
 
 public class PosProviderCharReusableStreamWrapper extends ReusableStreamWrapper<Character> implements PosProvider {
     public char[] notVisible = {
@@ -24,7 +25,7 @@ public class PosProviderCharReusableStreamWrapper extends ReusableStreamWrapper<
     public void redo() {
         var c = get();
 
-        if (!Lexer.in(c, notVisible))
+        if (!in(c, notVisible))
             currentPos.pos -= 1;
 
         if(c == '\n') {
@@ -39,7 +40,7 @@ public class PosProviderCharReusableStreamWrapper extends ReusableStreamWrapper<
     public Character next() {
         var c = super.next();
 
-        if (!Lexer.in(c, notVisible))
+        if (!in(c, notVisible))
             currentPos.pos += 1;
 
         if(c == '\n') {
