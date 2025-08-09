@@ -1,1 +1,3 @@
+logger.lifecycle("Ran on " + Runtime.version() + " java version.")
+
 rootProject.name = "pl-compiler-framework"
