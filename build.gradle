@@ -1,12 +1,20 @@
 project.plugins.apply("java")
+project.plugins.apply("java-library")
 project.plugins.apply("idea")
 project.plugins.apply("maven-publish")
 
-project.version = version
-project.group = group
+project.ext.jitpack = Boolean.parseBoolean(System.getenv("JITPACK") ?: "false");
+
+if (!project.ext.jitpack) {
+    project.logger.lifecycle("Building on local.")
+    project.version = version
+    project.group = group
+} else {
+    project.logger.lifecycle("Building on jitpack platform.")
+}
 
 wrapper {
-    gradleVersion = "8.8"
+    gradleVersion = "8.14.3"
 }
 
 sourceSets.main.java.srcDirs = ["src", "gen"]
@@ -19,14 +27,19 @@ repositories {
     maven { url "https://maven.nikr.net/" }
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 tasks.withType(JavaCompile) {
+    dependsOn tasks.named("sourcesJar")
+
     options.encoding = "UTF-8"
-    options.compilerArgs += [
-            "-Xlint:none"
-    ]
     options.generatedSourceOutputDirectory.set(project.file("gen"))
 
     sourceCompatibility = JavaVersion.VERSION_20
+    targetCompatibility = JavaVersion.VERSION_1_8
 
     options.compilerArgs = [
             "--release", "8",
@@ -38,18 +51,17 @@ tasks.withType(JavaCompile) {
     }
 }
 
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        project.configurations.runtimeClasspath.collect { File file ->
-            file.isDirectory() ? file : zipTree(file)
-        }
-    }
-}
-
 dependencies {
     annotationProcessor "com.pkware.jabel:jabel-javac-plugin:$jabelVersion"
     compileOnly "com.pkware.jabel:jabel-javac-plugin:$jabelVersion"
 
-    implementation "com.github.Anuken.Arc:arc-core:$arcVersion"
+    api "com.github.Anuken.Arc:arc-core:$arcVersion"
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.java
+        }
+    }
 }
