@@ -1,1 +1,3 @@
+logger.lifecycle(System.getProperty("java.version"))
+
 rootProject.name = "pl-compiler-framework"
